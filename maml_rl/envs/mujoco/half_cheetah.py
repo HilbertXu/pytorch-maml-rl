@@ -21,13 +21,13 @@ class HalfCheetahEnv(HalfCheetahEnv_):
 
     def render(self, mode='human'):
         if mode == 'rgb_array':
-            self._get_viewer().render()
+            self._get_viewer(mode=mode).render()
             # window size used for old mujoco-py:
             width, height = 500, 500
             data = self._get_viewer().read_pixels(width, height, depth=False)
             return data
         elif mode == 'human':
-            self._get_viewer().render()
+            self._get_viewer(mode=mode).render()
 
 
 class HalfCheetahVelEnv(HalfCheetahEnv):
@@ -70,7 +70,8 @@ class HalfCheetahVelEnv(HalfCheetahEnv):
         done = False
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task=self._task)
+                     forward_speed=forward_vel,
+                     task=self._goal_vel)
         return (observation, reward, done, infos)
 
     def sample_tasks(self, num_tasks):
