@@ -4,6 +4,10 @@ import json
 import os
 import yaml
 from tqdm import trange
+from collections import OrderedDict
+import json
+import numpy as np
+import pickle
 
 import maml_rl.envs
 from maml_rl.metalearners import MAMLTRPO
@@ -11,6 +15,11 @@ from maml_rl.baseline import LinearFeatureBaseline
 from maml_rl.samplers import MultiTaskSampler
 from maml_rl.utils.helpers import get_policy_for_env, get_input_size
 from maml_rl.utils.reinforcement_learning import get_returns
+
+def load_pkl(name):
+    with open(name, 'rb') as f:
+        # Return dict data
+        return pickle.load(f)
 
 
 def main(args):
@@ -22,6 +31,7 @@ def main(args):
             os.makedirs(args.output_folder)
         policy_filename = os.path.join(args.output_folder, 'policy.th')
         config_filename = os.path.join(args.output_folder, 'config.json')
+        history_filename = os.path.join(args.output_folder, 'history.pkl')
 
         with open(config_filename, 'w') as f:
             config.update(vars(args))
@@ -59,6 +69,7 @@ def main(args):
                            device=args.device)
 
     num_iterations = 0
+    all_logs = dict()
     for batch in trange(config['num-batches']):
         tasks = sampler.sample_tasks(num_tasks=config['meta-batch-size'])
         futures = sampler.sample_async(tasks,
@@ -81,11 +92,13 @@ def main(args):
                     num_iterations=num_iterations,
                     train_returns=get_returns(train_episodes[0]),
                     valid_returns=get_returns(valid_episodes))
-
+        all_logs[batch] = logs
         # Save policy
         if args.output_folder is not None:
             with open(policy_filename, 'wb') as f:
                 torch.save(policy.state_dict(), f)
+    with open(history_filename, 'wb') as f:
+        pickle.dump(all_logs, f, pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':

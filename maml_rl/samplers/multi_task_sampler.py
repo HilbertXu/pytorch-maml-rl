@@ -12,6 +12,9 @@ from maml_rl.envs.utils.sync_vector_env import SyncVectorEnv
 from maml_rl.episode import BatchEpisodes
 from maml_rl.utils.reinforcement_learning import reinforce_loss
 
+from maml_rl.utils.torch_utils import (weighted_mean, detach_distribution,
+                                       to_numpy, vector_to_parameters)
+
 
 def _create_consumer(queue, futures, loop=None):
     if loop is None:
@@ -315,7 +318,7 @@ class SamplerWorker(mp.Process):
 
                 new_observations, rewards, _, infos = self.envs.step(actions)
                 batch_ids = infos['batch_ids']
-                yield (observations, actions, rewards, batch_ids)
+                yield (observations, actions, rewards, infos['infos'], batch_ids)
                 observations = new_observations
 
     def run(self):

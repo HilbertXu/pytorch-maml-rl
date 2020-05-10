@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 
 from collections import OrderedDict
+from torch.nn.utils.convert_parameters import parameters_to_vector
+from maml_rl.utils.torch_utils import (weighted_mean, detach_distribution,
+                                       to_numpy, vector_to_parameters)
 
 def weight_init(module):
     if isinstance(module, nn.Linear):
@@ -29,8 +32,15 @@ class Policy(nn.Module):
         grads = torch.autograd.grad(loss, params.values(),
                                     create_graph=not first_order)
 
+        # test part for applying updated parameters to policy
+        for param, grad in zip(self.parameters(), grads):
+            param = param - step_size * grad
+
         updated_params = OrderedDict()
         for (name, param), grad in zip(params.items(), grads):
             updated_params[name] = param - step_size * grad
 
         return updated_params
+
+
+

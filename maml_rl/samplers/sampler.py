@@ -1,8 +1,10 @@
 import gym
+from gym import wrappers
 
 def make_env(env_name, env_kwargs={}, seed=None):
     def _make_env():
         env = gym.make(env_name, **env_kwargs)
+        # env = wrappers.Monitor(env, 'recording', force=True, mode='evaluation')
         if hasattr(env, 'seed'):
             env.seed(seed)
         return env
